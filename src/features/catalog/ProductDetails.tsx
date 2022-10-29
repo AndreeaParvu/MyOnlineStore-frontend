@@ -2,10 +2,9 @@ import { LoadingButton } from "@mui/lab";
 import { Divider, Grid, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import agent from "../../app/api/agent";
-import { Product } from "../../app/models/product";
 import { useAppDispatch, useAppSelector } from "../../app/store/configureStore";
 import { addBasketItemAsync, removeBasketItemAsync, setBasket } from "../basket/basketSlice";
+import { fetchProductAsync, productSelectors } from "./catalogSlice";
 import ProductCard from "./ProductCard";
 
 export default function ProductDetails() {
@@ -13,20 +12,16 @@ export default function ProductDetails() {
     const dispatch = useAppDispatch();
 
     const {id} = useParams<{id: string | undefined}>();  // il vede ca string deoarece il citeste din URL
-    const [product, setProducts] = useState<Product | null>(null);
-    const [loading, setLoading] = useState(true); 
+    const product = useAppSelector(state => productSelectors.selectById(state, id!));
+   
+    const{status: productStatus} = useAppSelector(state => state.catalog); // 2 statusuri diferite cu acelasi nume
     const [quantity, setQuantity] = useState(0); //giving it 0 we don't need to specify the kind of state that it is
     const item = basket?.items.find(i => i.product.id === product?.id);
 
     useEffect(() => {
         if (item) setQuantity(item.quantity);
-        if(id) {
-            agent.Catalog.details(parseInt(id))
-         .then(response => setProducts(response))
-         .catch(error => console.log(error))
-         .finally(() => setLoading(false));
-        }
-}, [id, item]) //[id] = dependinta ce asigura chemarea componentei o singura data
+        if (!product) dispatch(fetchProductAsync(parseInt(id!)));
+}, [id, item, dispatch, product]) //[id] = dependinta ce asigura chemarea componentei o singura data
                // we get the correct quantity value if we select a product that is in a basket
     
 function handleInputChange(event : any) {
@@ -46,7 +41,7 @@ function handleUpdateCart() {
     }
 }
 
-if (loading) return <h3>Loading...</h3>
+if (productStatus.includes('pending')) return <h3>Loading...</h3>
 
 if(!product) return <h3>Product not found</h3>
 
@@ -99,7 +94,7 @@ if(!product) return <h3>Product not found</h3>
                     <Grid item xs={6}>
                         <LoadingButton
                         disabled={item?.quantity === quantity || !item && quantity === 0}
-                        loading={status.includes('pendingRemoveItem' + item?.product.id)}
+                        loading={status.includes('pending')}
                         onClick={handleUpdateCart}
                            sx={{height: '55px'}}
                            color='primary'
