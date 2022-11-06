@@ -3,8 +3,9 @@
 
 import axios, { AxiosError, AxiosResponse } from "axios";
 import { toast } from "react-toastify";
+import { store } from "../store/configureStore";
 
-axios.defaults.baseURL = 'http://localhost:8080/commerce/api/public';
+axios.defaults.baseURL = 'http://localhost:8080/commerce/api/';
 axios.defaults.withCredentials = true;
 
 //Arrow function;
@@ -14,6 +15,12 @@ const responseBody = (response: AxiosResponse) => response.data;
 // function responseBody(response: AxiosResponse) {
 //     return response.data;
 // }
+
+axios.interceptors.request.use(config => {
+    const token = store.getState().account.user?.token; //get the token
+    if (token) config.headers!.Authorization! = `Bearer ${token}`;
+    return config;
+});
 
 axios.interceptors.response.use(response => {
     return response
@@ -26,7 +33,7 @@ axios.interceptors.response.use(response => {
             break;
 
         case 401:
-            toast.error("Unauthorized");
+            toast.error("Unauthorised");
             break;
             
         case 500:
@@ -42,15 +49,16 @@ axios.interceptors.response.use(response => {
    //--> Axios can't catch and handle the errors, they have to be handled in the components!
 
 const requests = {
-    get: (url: string) => axios.get(url).then(responseBody),
-    post: (url: string, body: {}) => axios.post(url, body).then(responseBody),
+    get: (url: string, params?: URLSearchParams) => axios.get(url, { params }).then(responseBody),
+    post: (url: string, body: {}, params?: URLSearchParams) => axios.post(url, body, { params }).then(responseBody),
     put: (url: string, body: {}) => axios.put(url, body).then(responseBody),
     delete: (url: string) => axios.delete(url).then(responseBody)
 }
 
 const Catalog = {
-    list: () => requests.get('catalog/products'),
-    details: (id: number) => requests.get(`catalog/product/${id}`)
+    list: (filter: any, params: URLSearchParams) => requests.post('public/catalog/products', filter, params),
+    details: (id: number) => requests.get(`public/catalog/product/${id}`),
+    filters: () => requests.get('public/catalog/products/filters')
 }
 
 const TestErrors = {
@@ -63,14 +71,21 @@ const TestErrors = {
 
 const Basket = {
     get: () => requests.get('basket'),
-    addItem: (productId: number, quantity = 1) => requests.post(`basket`, { productId, quantity }),
-    removeItem: (productId: number, quantity = 1) => requests.delete(`basket/${productId}/${quantity}`),
+    addItem: (productId: number, quantity = 1) => requests.post(`public/basket`, { productId, quantity }),
+    removeItem: (productId: number, quantity = 1) => requests.delete(`public/basket/${productId}/${quantity}`),
+}
+
+const Account = {
+    login: (values: any) => requests.post('auth/signin', values),
+    register: (values: any) => requests.post('auth/signup', values),
+    currentUser: () => requests.get('/user')
 }
 
 const agent = {
     Catalog,
     TestErrors,
-    Basket
+    Basket,
+    Account
 }
 
 export default agent;

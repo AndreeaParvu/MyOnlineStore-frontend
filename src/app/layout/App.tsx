@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import { Container } from "@mui/system";
 import { Route } from "react-router";
@@ -12,45 +12,52 @@ import Header from './Header';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import BasketPage from '../../features/basket/BasketPage';
-import { getCookie } from '../util/util';
-import agent from '../api/agent';
 import CheckoutPage from '../../features/checkout/CheckoutPage';
 import { useAppDispatch } from '../store/configureStore';
-import { setBasket } from '../../features/basket/basketSlice';
+import { fetchBasketAsync } from '../../features/basket/basketSlice';
+import Login from '../../features/account/Login';
+import Register from '../../features/account/Register';
+import { fetchCurrentUser } from '../../features/account/accountSlice';
+import PrivateRoutes from './PrivateRoutes';
 
 
 function App() {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const buyerId = getCookie('buyerId');
-    if (buyerId) {
-      agent.Basket.get()
-      .then(basket => dispatch(setBasket(basket)))
-      .catch(error => console.log(error))
-      .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+  //useCallback => prevents the state to change on every render => 
+  // loop of constantly fetching the user & the basket
+
+  const initApp = useCallback(async () => { 
+    try {
+      await dispatch(fetchCurrentUser());
+      await dispatch(fetchBasketAsync());
+    } catch (error) {
+      console.log(error);
     }
   }, [dispatch])
 
+  useEffect(() => {
+    initApp().then(() => setLoading(false))
+  }, [initApp]);
+
   const[darkMode, setDarkMode] = useState(false);
   const paletteType = darkMode ? 'dark' : 'light';
+  
   const theme = createTheme({
-    palette:{
+    palette: {
       mode: paletteType,
       background: {
         default: paletteType === 'light' ? '#eaeaea' : '#121212'
       }
     }
-  })
+  });
 
   function handleThemeChange() {
     setDarkMode(!darkMode);
   }
 
-  // if (loading) return <Loading>'Initializing app...'</Loading>
+  if (loading) return (<h1> Loading... </h1>) 
 
   return (
     <ThemeProvider theme={theme}>
@@ -66,6 +73,11 @@ function App() {
          <Route path='/contact' element={<ContactPage/>} />
          <Route path='/basket' element={<BasketPage/>}/>
          <Route path='/checkout' element={<CheckoutPage/>}/>
+         <Route path='/login' element={<Login/>}/>
+         <Route path='/register' element={<Register/>}/>
+         <Route element={<PrivateRoutes />}>
+             <Route path='/checkout' element={<CheckoutPage />} />
+         </Route>
          </Routes>
       </Container>
     </ThemeProvider>
