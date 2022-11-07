@@ -70,7 +70,7 @@ const TestErrors = {
 }
 
 const Basket = {
-    get: () => requests.get('basket'),
+    get: () => requests.get('public/basket'),
     addItem: (productId: number, quantity = 1) => requests.post(`public/basket`, { productId, quantity }),
     removeItem: (productId: number, quantity = 1) => requests.delete(`public/basket/${productId}/${quantity}`),
 }

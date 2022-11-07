@@ -45,11 +45,6 @@ export const fetchBasketAsync = createAsyncThunk<Basket>(
         } catch(error: any) {
             return thunkAPI.rejectWithValue({error: error.data});
         }
-    },
-    {
-        condition: () => {
-            if (!getCookie('buyerId')) return false;
-        }
     }
 )
 

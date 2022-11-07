@@ -9,16 +9,21 @@ interface Props {
     handleThemeChange: () => void;
 }
 
-const midLinks = [
+interface LinkMapping {
+    title: string,
+    path: string
+}
+
+const midLinks: LinkMapping[] = [
     {title: 'catalog', path: '/catalog'},
     {title: 'about', path: '/about'},
     {title: 'contact', path: '/contact'}
-]
+];
 
-const rightLinks = [
+const rightLinks: LinkMapping[] = [
     {title: 'login', path: '/login'},
     {title: 'register', path: '/register'}
-]
+];
 
 const navStyles = {
     color: 'inherit', 
@@ -30,23 +35,22 @@ const navStyles = {
     '&.active': {
         color: 'text.secondary'
     }
-}
+};
 
 export default function Header({darkMode, handleThemeChange}: Props){
+
     const {basket} = useAppSelector(state => state.basket);
     const {user} = useAppSelector(state => state. account);
-    const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0)
+
+    const itemCount = basket?.items.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
-        <AppBar position="static" sx={{mb: 4}}>
-            <Toolbar sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <AppBar position="static" sx={{ mb: 4 }}>
+            <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
 
-                <Box display= 'flex' alignItems= 'center'>
-                   <Typography variant="h6" component={NavLink} 
-                      to='/' 
-                    // exact?
-                      sx={navStyles}>
-                      Online Store
+                <Box display='flex' alignItems='center'>
+                   <Typography variant="h6" component={NavLink} to='/' sx={navStyles}>
+                      Andreea's Store
                    </Typography>
                    <Switch checked={darkMode} onChange={handleThemeChange}/>
                 </Box>
@@ -54,8 +58,8 @@ export default function Header({darkMode, handleThemeChange}: Props){
                 
                 {/* MID-LINKS */}
                 {/* proprietatile css se scriu in cadrul sx */}
-                <List sx={{display: 'flex'}}> 
-                    {midLinks.map(({title, path}) => (
+                <List sx={{ display: 'flex' }}> 
+                    {midLinks.map(({ title, path }) => (
                         <ListItem
                            component={NavLink}
                            to={path}
@@ -68,7 +72,7 @@ export default function Header({darkMode, handleThemeChange}: Props){
                 </List>
 
                 <Box display= 'flex' alignItems= 'center'>
-                   <IconButton component={Link} to='/basket' size='large' sx={{color: 'inherit'}}>
+                   <IconButton component={Link} to='/basket' size='large' sx={{ color: 'inherit' }}>
                        <Badge badgeContent={itemCount} color='secondary'>
                            <ShoppingCart />
                        </Badge>
@@ -84,7 +88,7 @@ export default function Header({darkMode, handleThemeChange}: Props){
                              component={NavLink}
                              to={path}
                              key={path}
-                             sx={{navStyles}}>
+                             sx={navStyles}>
                              {title.toUpperCase()}   
                        </ListItem>
                    ))}

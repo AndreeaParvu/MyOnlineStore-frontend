@@ -1,17 +1,17 @@
 export interface Product {
-    id: number;
-    name: string;
-    description:string;
-    price: number;
-    pictureUrl: string;
-    type: string; 
-    brand: string;
-    quantityInStock: number;
+    id: number,
+    name: string,
+    description: string,
+    price: number,
+    pictureUrl: string,
+    type: string,
+    brand: string,
+    quantityInStock: number
 };
 
 export interface ProductFilterOptions {
-    types: string[];
-    brands: string[];
+    types: string[],
+    brands: string[]
 };
 
 //toti parametrii pasati drept query strings
@@ -36,7 +36,7 @@ export function toProductSearchBodyParams(productParams: ProductSearchParams) : 
         types: productParams.types,
         brands: productParams.brands
     }
-}
+};
 
 export interface PageMetadata {
     number: number,
