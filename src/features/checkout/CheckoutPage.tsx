@@ -17,6 +17,10 @@ import Review from './Review';
 import { FieldValues, FormProvider, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { validationSchema } from './checkoutValidation';
+import agent from '../../app/api/agent';
+import { useAppDispatch } from '../../app/store/configureStore';
+import { fetchBasketAsync } from '../basket/basketSlice';
+import { LoadingButton } from '@mui/lab';
 
 function Copyright() {
     return (
@@ -54,12 +58,28 @@ export default function CheckoutPage() {
         resolver: yupResolver(validationSchema)
     });
     const [activeStep, setActiveStep] = React.useState(0);
+    const [orderNumber, setOrderNumber] = React.useState(0);
+    const [loading, setLoading] = React.useState(false);
+    const dispatch = useAppDispatch();
 
-    const handleNext = (data: FieldValues) => {
-        if (activeStep === 0) {
-            console.log(data);
+    const handleNext = async (data: FieldValues) => {
+        const { saveAddress, ...shippingAddress } = data;
+
+        if (activeStep === steps.length - 1) {
+            setLoading(true);
+            try {
+                const order = await agent.Order.create({saveAddress, shippingAddress});
+                setOrderNumber(order.id);
+                setActiveStep(activeStep + 1);
+                await dispatch(fetchBasketAsync());
+                setLoading(false);
+            } catch(error) {
+                console.log(error);
+                setLoading(false);
+            }
+        } else {
+            setActiveStep(activeStep + 1);
         }
-        setActiveStep(activeStep + 1);
     };
 
     const handleBack = () => {
@@ -99,9 +119,9 @@ export default function CheckoutPage() {
                                     Thank you for your order.
                                 </Typography>
                                 <Typography variant="subtitle1">
-                                    Your order number is #2001539. We have emailed your order
-                                    confirmation, and will send you an update when your order has
-                                    shipped.
+                                    Your order number is #{orderNumber}. We have not emailed your order
+                                    confirmation, and will not send you an update when your order has
+                                    shipped as this is a fake store.
                                 </Typography>
                             </React.Fragment>
                         ) : (
@@ -113,14 +133,15 @@ export default function CheckoutPage() {
                                             Back
                                         </Button>
                                     )}
-                                    <Button
+                                    <LoadingButton
+                                        loading={loading}
                                         disabled={!methods.formState.isValid}
                                         variant="contained"
                                         type='submit'
                                         sx={{ mt: 3, ml: 1 }}
                                     >
                                         {activeStep === steps.length - 1 ? 'Place order' : 'Next'}
-                                    </Button>
+                                    </LoadingButton>
                                 </Box>
                             </form>
                         )}

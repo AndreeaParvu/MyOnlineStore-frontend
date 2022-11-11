@@ -54,6 +54,11 @@ export const basketSlice = createSlice({
     reducers: {
         setBasket: (state, action) => {
             state.basket = action.payload
+        },
+        clearBasket: (state) => {
+            if (state.basket) {
+                state.basket.items = [];
+            }
         }
     },
 
